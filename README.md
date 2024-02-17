@@ -11,11 +11,11 @@ Developed in hopes to make the process of dealing with Jira a tiny bit less anno
 
 ## Configuration
 
-Customize the extension behavior via the following settings in your VSCode settings.json:
+Customize the extension behavior via the following settings in your VSCode `settings.json`:
 
-- `jira-commit-message.commitMessagePrefixPattern`: Regex pattern to match issue prefixes in branch names. Default is `(ML-\\d+)-.*`.
-- `jira-commit-message.commitMessageFormat`: Format for the commit message. Use `${prefix}` for the branch prefix and `${message}` for the original commit message. Default is `"[${prefix}] ${message}"`.
-- `jira-commit-message.gitHeadWatchInterval`: Interval in milliseconds to watch the `.git/HEAD` file for changes. Default is `1000`.
+- `commitMessagePrefixPattern`: Regex pattern to match issue prefixes in branch names. Default is `(ML-\\d+)-.*`.
+- `commitMessageFormat`: Format for the commit message. Use `${prefix}` for the branch prefix and `${message}` for the original commit message. Default is `"[${prefix}] ${message}"`.
+- `gitHeadWatchInterval`: Interval in milliseconds to watch the `.git/HEAD` file for changes. Default is `1000`.
 
 ## Usage
 
