@@ -1,71 +1,40 @@
-# jira-commit-message README
+# Jira Commit Message Extension for VSCode
 
-This is the README for your extension "jira-commit-message". After writing up a brief description, we recommend including the following sections.
+This VSCode extension automatically prefixes commit messages with a Jira issue code extracted from the branch name.
+Developed in hopes to make the process of dealing with Jira a tiny bit less annoying.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Automatic Prefixing:** Automatically adds a Jira issue code as a prefix to commit messages based on the current branch name.
+- **Customizable Patterns:** Allows for custom configuration of the issue code extraction pattern and commit message format.
+- **Outdated Prefix Handling:** Detects and updates outdated prefixes in commit messages when the branch changes.
 
-For example if there is an image subfolder under your extension project workspace:
+## Configuration
 
-\!\[feature X\]\(images/feature-x.png\)
+Customize the extension behavior via the following settings in your VSCode settings.json:
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- `jira-commit-message.commitMessagePrefixPattern`: Regex pattern to match issue prefixes in branch names. Default is `(ML-\\d+)-.*`.
+- `jira-commit-message.commitMessageFormat`: Format for the commit message. Use `${prefix}` for the branch prefix and `${message}` for the original commit message. Default is `"[${prefix}] ${message}"`.
+- `jira-commit-message.gitHeadWatchInterval`: Interval in milliseconds to watch the `.git/HEAD` file for changes. Default is `1000`.
 
-## Requirements
+## Usage
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Once installed, the extension automatically watches for branch changes and updates the commit message input in VSCode's Source Control panel according to the configured patterns.
 
-## Extension Settings
+## Installation
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+Install the extension directly from the Visual Studio Code Marketplace:
+1. Open VSCode.
+2. Navigate to Extensions by clicking on the square icon on the sidebar or pressing Ctrl+Shift+X.
+3. Search for "Jira Commit Message".
+4. Click on "Install".
 
-For example:
+Alternatively, you can install it via the [VSCode Marketplace website](https://example.com).
 
-This extension contributes the following settings:
+## Contributing
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+Contributions are welcome! Please submit pull requests with any enhancements, bug fixes, or suggestions.
 
-## Known Issues
+## License
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
