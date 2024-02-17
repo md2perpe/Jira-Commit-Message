@@ -1,14 +1,19 @@
 {
   "name": "jira-commit-message",
   "displayName": "Jira Commit Message",
+  "publisher": "KiviCode",
+  "repository": {
+    "url": "https://github.com/kivicode/Jira-Commit-Message"
+  },
   "description": "A VSCode extension for the automation of the adding of the relevant issue code to each commit message",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.86.0"
   },
-  "categories": [
-    "Other"
-  ],
+  "license": "MIT",
+  "categories": ["Other"],
+  "keywords": ["jira", "prefix", "commit", "issue", "git"],
+  "icon": "assets/icon.png",
   "activationEvents": [
     "onStartupFinished",
     "onDidCommit",

@@ -29,7 +29,7 @@ Install the extension directly from the Visual Studio Code Marketplace:
 3. Search for "Jira Commit Message".
 4. Click on "Install".
 
-Alternatively, you can install it via the [VSCode Marketplace website](https://example.com).
+Alternatively, you can install it via the [VSCode Marketplace website](https://marketplace.visualstudio.com/items?itemName=KiviCode.jira-commit-message).
 
 ## Contributing
 
@@ -37,4 +37,4 @@ Contributions are welcome! Please submit pull requests with any enhancements, bu
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/kivicode/Jira-Commit-Message/LICENSE) file for details.
