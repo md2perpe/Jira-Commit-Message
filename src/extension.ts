@@ -1,26 +1,60 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import { GitExtension, Repository } from './git';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "jira-commit-message" is now active!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('jira-commit-message.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Jira Commit Message!');
-	});
+function getCommitMessage(branch: string, currentMessage: string): string {
+	const pattern = /(ML-\d+)-.*/;
 
-	context.subscriptions.push(disposable);
+	if (!pattern.test(branch)) {
+		return currentMessage;
+	}
+
+	const prefix = branch.match(pattern)![1];
+
+	if (currentMessage.startsWith(prefix)) {
+		return currentMessage;
+	}
+
+	return `[${prefix}] ${currentMessage}`;
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+function updateCommitMessage(repo: Repository) {
+	const branch = repo.state.HEAD?.name ?? "";
+
+	const existingPattern = /^\[.+\] ?(.*)/;
+
+	if (existingPattern.test(repo.inputBox.value)) {
+		repo.inputBox.value = repo.inputBox.value.replace(existingPattern, "$1");
+	}
+
+	repo.inputBox.value = getCommitMessage(branch, repo.inputBox.value);
+}
+
+export function activate(context: vscode.ExtensionContext) {
+	const gitExtension: GitExtension | null = vscode.extensions.getExtension('vscode.git')?.exports;
+	if (!gitExtension) {
+		vscode.window.showErrorMessage("Unable to load the Git extension");
+		return;
+	}
+	const git = gitExtension.getAPI(1);
+
+	for (const repo of git.repositories) {
+		updateCommitMessage(repo);
+
+		const gitHeadPath: string = path.join(repo.rootUri.fsPath, '.git', 'HEAD');
+		vscode.window.showInformationMessage("Watching " + gitHeadPath);
+
+		try {
+			fs.watchFile(gitHeadPath, { interval: 1000 }, (cur, prev) => {
+				updateCommitMessage(repo);
+			});
+		} catch (error) {
+			vscode.window.showErrorMessage('Error watching .git/HEAD: ' + error);
+		}
+	}
+}
+
+export function deactivate() { }

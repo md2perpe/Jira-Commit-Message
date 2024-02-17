@@ -9,7 +9,11 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished",
+    "onDidCommit",
+    "onFileSystem:git"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
