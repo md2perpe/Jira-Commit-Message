@@ -21,7 +21,27 @@
         "command": "jira-commit-message.helloWorld",
         "title": "Hello World"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Jira Commit Message",
+      "properties": {
+        "jira-commit-message.commitMessagePrefixPattern": {
+          "type": "string",
+          "default": "(ML-\\d+)-.*",
+          "description": "The pattern to match issue prefixes in branch names."
+        },
+        "jira-commit-message.commitMessageFormat": {
+          "type": "string",
+          "default": "[${prefix}] ${message}",
+          "description": "Format for the commit message with prefix. Use ${prefix} for the branch prefix and ${message} for the original commit message."
+        },
+        "jira-commit-message.gitHeadWatchInterval": {
+          "type": "number",
+          "default": 1000,
+          "description": "Interval in milliseconds at which to watch the .git/HEAD file for changes."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

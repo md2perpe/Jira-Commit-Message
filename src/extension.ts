@@ -3,58 +3,84 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { GitExtension, Repository } from './git';
 
+interface ExtensionConfig {
+	commitMessagePrefixPattern: RegExp;
+	commitMessageFormat: string;
+	gitHeadWatchInterval: number;
+	outdatedPrefixPattern: RegExp;
+}
 
+function getExtensionConfig(): ExtensionConfig {
+	const config = vscode.workspace.getConfiguration('jira-commit-message');
+	const tagPattern = config.get<string>('commitMessagePrefixPattern', '(ML-\\d+)-.*');
+	const msgFormat = config.get<string>("commitMessageFormat", "[${prefix}] ${message}");
 
-function getCommitMessage(branch: string, currentMessage: string): string {
-	const pattern = /(ML-\d+)-.*/;
+	const match = tagPattern.match(/\(([^)]+)\)/);
+    const prefixPattern = match ? match[1] : tagPattern;
+    const outdatedPrefixPattern: string = msgFormat
+        .replace('${prefix}', `(${prefixPattern})`)
+        .replace('${message}', '(.*)')
+        .replace(/[\[\]]/g, '\\$&')
+        .replace(/\$/g, '\\$');
 
-	if (!pattern.test(branch)) {
-		return currentMessage;
-	}
-
-	const prefix = branch.match(pattern)![1];
-
-	if (currentMessage.startsWith(prefix)) {
-		return currentMessage;
-	}
-
-	return `[${prefix}] ${currentMessage}`;
+	return {
+		commitMessagePrefixPattern: new RegExp(tagPattern),
+		commitMessageFormat: msgFormat,
+		outdatedPrefixPattern: new RegExp(outdatedPrefixPattern),
+		gitHeadWatchInterval: config.get<number>('gitHeadWatchInterval', 1000),
+	};
 }
 
 function updateCommitMessage(repo: Repository) {
-	const branch = repo.state.HEAD?.name ?? "";
+	const config = getExtensionConfig();
+	const branch: string = repo.state.HEAD?.name ?? "";
 
-	const existingPattern = /^\[.+\] ?(.*)/;
-
-	if (existingPattern.test(repo.inputBox.value)) {
-		repo.inputBox.value = repo.inputBox.value.replace(existingPattern, "$1");
+	if (config.outdatedPrefixPattern.test(repo.inputBox.value)) {
+		repo.inputBox.value = repo.inputBox.value.replace(config.outdatedPrefixPattern, "$2");
 	}
 
-	repo.inputBox.value = getCommitMessage(branch, repo.inputBox.value);
+	repo.inputBox.value = getCommitMessage(branch, repo.inputBox.value, config);
 }
 
-export function activate(context: vscode.ExtensionContext) {
-	const gitExtension: GitExtension | null = vscode.extensions.getExtension('vscode.git')?.exports;
+function getCommitMessage(branch: string, currentMessage: string, config: ExtensionConfig): string {
+	if (!config.commitMessagePrefixPattern.test(branch)) {
+		return currentMessage;
+	}
+
+	const prefixMatch = branch.match(config.commitMessagePrefixPattern);
+	if (!prefixMatch) { return currentMessage; }
+
+	const prefix = prefixMatch[1];
+	const formattedMessage = config.commitMessageFormat
+		.replace('${prefix}', prefix)
+		.replace('${message}', currentMessage);
+
+	return formattedMessage;
+}
+
+export function activate(context: vscode.ExtensionContext): void {
+	const gitExtension: GitExtension | undefined = vscode.extensions.getExtension<GitExtension>('vscode.git')?.exports;
 	if (!gitExtension) {
 		vscode.window.showErrorMessage("Unable to load the Git extension");
 		return;
 	}
 	const git = gitExtension.getAPI(1);
+	const config = getExtensionConfig();
 
-	for (const repo of git.repositories) {
+	git.repositories.forEach(repo => {
 		updateCommitMessage(repo);
 
 		const gitHeadPath: string = path.join(repo.rootUri.fsPath, '.git', 'HEAD');
 		vscode.window.showInformationMessage("Watching " + gitHeadPath);
 
 		try {
-			fs.watchFile(gitHeadPath, { interval: 1000 }, (cur, prev) => {
+			fs.watchFile(gitHeadPath, { interval: config.gitHeadWatchInterval }, () => {
 				updateCommitMessage(repo);
 			});
 		} catch (error) {
 			vscode.window.showErrorMessage('Error watching .git/HEAD: ' + error);
 		}
-	}
+	});
 }
 
-export function deactivate() { }
+export function deactivate(): void { }
