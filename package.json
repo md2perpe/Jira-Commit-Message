@@ -23,10 +23,19 @@
   "contributes": {
     "commands": [
       {
-        "command": "jira-commit-message.helloWorld",
-        "title": "Hello World"
+        "command": "jira-commit-message.update-message",
+        "title": "Update Commit Message",
+        "icon": "assets/jira_icon.svg"
       }
     ],
+    "menus": {
+			"scm/title": [
+				{
+					"command": "jira-commit-message.update-message",
+					"group": "navigation"
+				}
+			]
+		},
     "configuration": {
       "title": "Jira Commit Message",
       "properties": {

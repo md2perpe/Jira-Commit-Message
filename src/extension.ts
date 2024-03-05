@@ -16,12 +16,12 @@ function getExtensionConfig(): ExtensionConfig {
 	const msgFormat = config.get<string>("commitMessageFormat", "[${prefix}] ${message}");
 
 	const match = tagPattern.match(/\(([^)]+)\)/);
-    const prefixPattern = match ? match[1] : tagPattern;
-    const outdatedPrefixPattern: string = msgFormat
-        .replace('${prefix}', `(${prefixPattern})`)
-        .replace('${message}', '(.*)')
-        .replace(/[\[\]]/g, '\\$&')
-        .replace(/\$/g, '\\$');
+	const prefixPattern = match ? match[1] : tagPattern;
+	const outdatedPrefixPattern: string = msgFormat
+		.replace('${prefix}', `(${prefixPattern})`)
+		.replace('${message}', '(.*)')
+		.replace(/[\[\]]/g, '\\$&')
+		.replace(/\$/g, '\\$');
 
 	return {
 		commitMessagePrefixPattern: new RegExp(tagPattern),
@@ -58,6 +58,7 @@ function getCommitMessage(branch: string, currentMessage: string, config: Extens
 	return formattedMessage;
 }
 
+
 export function activate(context: vscode.ExtensionContext): void {
 	const gitExtension: GitExtension | undefined = vscode.extensions.getExtension<GitExtension>('vscode.git')?.exports;
 	if (!gitExtension) {
@@ -68,19 +69,38 @@ export function activate(context: vscode.ExtensionContext): void {
 	const config = getExtensionConfig();
 
 	git.repositories.forEach(repo => {
-		updateCommitMessage(repo);
+		const gitDir = path.join(repo.rootUri.fsPath, '.git');
+		const gitHeadPath = path.join(gitDir, 'HEAD');
+		// vscode.window.showInformationMessage("Watching " + gitHeadPath);
 
-		const gitHeadPath: string = path.join(repo.rootUri.fsPath, '.git', 'HEAD');
-		vscode.window.showInformationMessage("Watching " + gitHeadPath);
+		fs.readFile(gitHeadPath, 'utf8', (err, initialHeadContent) => {
+			if (err) {
+				vscode.window.showErrorMessage('Error reading .git/HEAD: ' + err);
+				return;
+			}
 
-		try {
-			fs.watchFile(gitHeadPath, { interval: config.gitHeadWatchInterval }, () => {
-				updateCommitMessage(repo);
+			const initialRef = initialHeadContent.startsWith('ref:') ? initialHeadContent.split(' ')[1].trim() : null;
+			const refFilePath = initialRef ? path.join(gitDir, initialRef) : null;
+
+			fs.watchFile(gitHeadPath, { interval: config.gitHeadWatchInterval }, (curr, prev) => {
+				if (curr.mtime !== prev.mtime) {
+					updateCommitMessage(repo);
+				}
 			});
-		} catch (error) {
-			vscode.window.showErrorMessage('Error watching .git/HEAD: ' + error);
-		}
+
+			if (!refFilePath) { return; }
+			fs.watchFile(refFilePath, { interval: config.gitHeadWatchInterval }, (curr, prev) => {
+				if (curr.mtime !== prev.mtime) {
+					updateCommitMessage(repo);
+				}
+			});
+		});
+
+		updateCommitMessage(repo);
 	});
+	context.subscriptions.push(vscode.commands.registerCommand('jira-commit-message.update-message', async (uri?) => {
+		git.repositories.forEach(updateCommitMessage);
+	}));
 }
 
 export function deactivate(): void { }
