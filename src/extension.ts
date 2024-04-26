@@ -69,31 +69,8 @@ export function activate(context: vscode.ExtensionContext): void {
 	const config = getExtensionConfig();
 
 	git.repositories.forEach(repo => {
-		const gitDir = path.join(repo.rootUri.fsPath, '.git');
-		const gitHeadPath = path.join(gitDir, 'HEAD');
-		// vscode.window.showInformationMessage("Watching " + gitHeadPath);
-
-		fs.readFile(gitHeadPath, 'utf8', (err, initialHeadContent) => {
-			if (err) {
-				vscode.window.showErrorMessage('Error reading .git/HEAD: ' + err);
-				return;
-			}
-
-			const initialRef = initialHeadContent.startsWith('ref:') ? initialHeadContent.split(' ')[1].trim() : null;
-			const refFilePath = initialRef ? path.join(gitDir, initialRef) : null;
-
-			fs.watchFile(gitHeadPath, { interval: config.gitHeadWatchInterval }, (curr, prev) => {
-				if (curr.mtime !== prev.mtime) {
-					updateCommitMessage(repo);
-				}
-			});
-
-			if (!refFilePath) { return; }
-			fs.watchFile(refFilePath, { interval: config.gitHeadWatchInterval }, (curr, prev) => {
-				if (curr.mtime !== prev.mtime) {
-					updateCommitMessage(repo);
-				}
-			});
+		repo.state.onDidChange(_ => {
+			updateCommitMessage(repo);
 		});
 
 		updateCommitMessage(repo);
